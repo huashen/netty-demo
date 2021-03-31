@@ -8,6 +8,8 @@ import java.nio.channels.FileChannel;
 /**
  * TestFileChannelTransferTo
  *
+ * 使用FileChannel传输数据
+ *
  * @author longhuashen
  * @since 2021-03-31
  */
