@@ -43,9 +43,12 @@ public class Server {
             while (iterator.hasNext()) {
                 SelectionKey key = iterator.next();
                 log.debug("key:{}", key);
-                ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-                SocketChannel sc = channel.accept();
-                log.debug("sc:{}", sc);
+
+                //取消事件
+                key.cancel();
+//                ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+//                SocketChannel sc = channel.accept();
+//                log.debug("sc:{}", sc);
             }
 
         }
