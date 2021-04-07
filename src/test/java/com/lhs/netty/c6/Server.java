@@ -44,13 +44,23 @@ public class Server {
                 SelectionKey key = iterator.next();
                 log.debug("key:{}", key);
 
-                //取消事件
-                key.cancel();
-//                ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-//                SocketChannel sc = channel.accept();
-//                log.debug("sc:{}", sc);
-            }
+                if (key.isAcceptable()) {
+                    ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+                    SocketChannel sc = channel.accept();
+                    sc.configureBlocking(false);
+                    SelectionKey scKey = sc.register(selector, 0, null);
+                    scKey.interestOps(SelectionKey.OP_READ);
+                    log.debug("{}", sc);
+                } else if (key.isReadable()) {
+                    SocketChannel channel = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(16);
+                    channel.read(buffer);
+                    buffer.flip();
+                }
 
+                //移除key
+                iterator.remove();
+            }
         }
     }
 }
