@@ -5,14 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.util.ArrayList;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Server
- *
+ * <p>
  * 非阻塞模式
  *
  * @author longhuashen
@@ -42,24 +43,34 @@ public class Server {
             Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
             while (iterator.hasNext()) {
                 SelectionKey key = iterator.next();
+                //移除key
+                iterator.remove();
+
                 log.debug("key:{}", key);
 
                 if (key.isAcceptable()) {
+
                     ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                     SocketChannel sc = channel.accept();
                     sc.configureBlocking(false);
                     SelectionKey scKey = sc.register(selector, 0, null);
                     scKey.interestOps(SelectionKey.OP_READ);
                     log.debug("{}", sc);
-                } else if (key.isReadable()) {
-                    SocketChannel channel = (SocketChannel) key.channel();
-                    ByteBuffer buffer = ByteBuffer.allocate(16);
-                    channel.read(buffer);
-                    buffer.flip();
-                }
 
-                //移除key
-                iterator.remove();
+                } else if (key.isReadable()) {
+                    try {
+                        SocketChannel channel = (SocketChannel) key.channel();
+                        ByteBuffer buffer = ByteBuffer.allocate(16);
+                        int read = channel.read(buffer);
+                        if (read < 0) {
+                            key.cancel();
+                        }
+                        buffer.flip();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        key.cancel();
+                    }
+                }
             }
         }
     }
