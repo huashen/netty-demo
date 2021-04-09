@@ -61,7 +61,7 @@ public class Server {
                     try {
                         SocketChannel channel = (SocketChannel) key.channel();
                         ByteBuffer buffer = ByteBuffer.allocate(16);
-                        int read = channel.read(buffer);
+                        int read = channel.read(buffer);//如果正常断开，read的方法的返回值是-1
                         if (read < 0) {
                             key.cancel();
                         }
