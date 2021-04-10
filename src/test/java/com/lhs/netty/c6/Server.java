@@ -50,22 +50,30 @@ public class Server {
 
                 if (key.isAcceptable()) {
 
+                    ByteBuffer buffer = ByteBuffer.allocate(16);
                     ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                     SocketChannel sc = channel.accept();
                     sc.configureBlocking(false);
-                    SelectionKey scKey = sc.register(selector, 0, null);
+                    SelectionKey scKey = sc.register(selector, 0, buffer);
                     scKey.interestOps(SelectionKey.OP_READ);
                     log.debug("{}", sc);
 
                 } else if (key.isReadable()) {
                     try {
                         SocketChannel channel = (SocketChannel) key.channel();
-                        ByteBuffer buffer = ByteBuffer.allocate(16);
+                        ByteBuffer buffer = (ByteBuffer) key.attachment();
                         int read = channel.read(buffer);//如果正常断开，read的方法的返回值是-1
-                        if (read < 0) {
+                        if (read == -1) {
                             key.cancel();
+                        } else {
+                            split(buffer);
+                            if (buffer.position() == buffer.limit()) {
+                              ByteBuffer newByteBuffer = ByteBuffer.allocate(buffer.capacity() * 2);
+                              buffer.flip();
+                              newByteBuffer.put(buffer);
+                              key.attach(newByteBuffer);
+                            }
                         }
-                        buffer.flip();
                     } catch (Exception e) {
                         e.printStackTrace();
                         key.cancel();
@@ -73,5 +81,21 @@ public class Server {
                 }
             }
         }
+    }
+
+    private static void split(ByteBuffer source) {
+        source.flip();
+        for (int i = 0; i < source.limit(); i++) {
+            //找到一条完整信息
+            if (source.get(i) == '\n') {
+                int length = i + 1 - source.position();
+                ByteBuffer target = ByteBuffer.allocate(length);
+                //从source读，向target写
+                for (int j = 0; j < length; j++) {
+                    target.put(source.get());
+                }
+            }
+        }
+        source.compact();
     }
 }
