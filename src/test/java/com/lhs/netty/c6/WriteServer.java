@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
@@ -29,7 +26,7 @@ public class WriteServer {
 
         Selector selector = Selector.open();
         ssc.register(selector, SelectionKey.OP_ACCEPT);
-        ssc.bind(new InetSocketAddress(8080));
+        ssc.bind(new InetSocketAddress(8081));
 
         while (true) {
             selector.select();
@@ -43,15 +40,29 @@ public class WriteServer {
                     SocketChannel sc = channel.accept();
                     sc.configureBlocking(false);
 
+                    SelectionKey scKey = sc.register(selector, 0, null);
+                    scKey.interestOps(SelectionKey.OP_READ);
+
                     StringBuffer stringBuffer = new StringBuffer();
-                    for (int i =  0; i < 30000000; i++) {
+                    for (int i =  0; i < 5000000; i++) {
                         stringBuffer.append("a");
                     }
 
                     ByteBuffer byteBuffer = Charset.defaultCharset().encode(stringBuffer.toString());
-                    while (byteBuffer.hasRemaining()) {
-                        int write = sc.write(byteBuffer);
-                        log.info("write:{}", write);
+                    if (byteBuffer.hasRemaining()) {
+//                        int write = sc.write(byteBuffer);
+//                        log.info("write:{}", write);
+                        scKey.interestOps(scKey.interestOps() + SelectionKey.OP_WRITE);
+                        scKey.attach(byteBuffer);
+                    }
+                } else if(key.isWritable()) {
+                    ByteBuffer buffer = (ByteBuffer) key.attachment();
+                    SocketChannel sc = (SocketChannel) key.channel();
+                    int write = sc.write(buffer);
+                    System.out.println(write);
+                    if (!buffer.hasRemaining()) {
+                        key.attach(null);
+                        key.interestOps(key.interestOps() - SelectionKey.OP_WRITE);
                     }
                 }
             }
