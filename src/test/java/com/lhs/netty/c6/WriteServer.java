@@ -49,10 +49,13 @@ public class WriteServer {
                     }
 
                     ByteBuffer byteBuffer = Charset.defaultCharset().encode(stringBuffer.toString());
+                    //判断是否有剩余内容
                     if (byteBuffer.hasRemaining()) {
 //                        int write = sc.write(byteBuffer);
 //                        log.info("write:{}", write);
+                        //关闭可写事件
                         scKey.interestOps(scKey.interestOps() + SelectionKey.OP_WRITE);
+                        //把未写完的数据挂到scKey
                         scKey.attach(byteBuffer);
                     }
                 } else if(key.isWritable()) {
@@ -60,6 +63,7 @@ public class WriteServer {
                     SocketChannel sc = (SocketChannel) key.channel();
                     int write = sc.write(buffer);
                     System.out.println(write);
+                    //清理操作
                     if (!buffer.hasRemaining()) {
                         key.attach(null);
                         key.interestOps(key.interestOps() - SelectionKey.OP_WRITE);
