@@ -29,8 +29,6 @@ public class MultiThreadServ {
             if (!start) {
                 this.thread = new Thread(this, name);
                 thread.start();
-                this.name = name;
-                this.start = start;
                 worker = Selector.open();
                 start = true;
             }
