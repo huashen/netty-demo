@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.nio.channels.Selector;
 
 /**
- * MultiThreadServ
+ * MultiThreadServer
  *
  * @author longhuashen
  * @since 2021-04-15
  */
-public class MultiThreadServ {
+public class MultiThreadServer {
 
     public static void main(String[] args) {
 
