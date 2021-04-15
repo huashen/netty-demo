@@ -1,7 +1,11 @@
 package com.lhs.netty.c6;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 
 /**
  * MultiThreadServer
@@ -36,7 +40,24 @@ public class MultiThreadServer {
 
         @Override
         public void run() {
-
+            while (true) {
+                try {
+                    worker.select();
+                    Iterator<SelectionKey> iterator = worker.selectedKeys().iterator();
+                    while (iterator.hasNext()) {
+                        SelectionKey key = iterator.next();
+                        iterator.remove();
+                        if (key.isReadable()) {
+                            ByteBuffer buffer = ByteBuffer.allocate(16);
+                            SocketChannel channel = (SocketChannel) key.channel();
+                            channel.read(buffer);
+                            buffer.flip();
+                        }
+                    }
+                } catch (IOException e ) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
