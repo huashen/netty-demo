@@ -10,6 +10,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * MultiThreadServer
@@ -33,7 +34,6 @@ public class MultiThreadServer {
         ssc.bind(new InetSocketAddress(8081));
 
         Worker worker = new Worker("workder-0");
-        worker.register();
 
         while (true) {
             boss.select();
@@ -46,7 +46,7 @@ public class MultiThreadServer {
                     log.debug("connected:{}", sc.getRemoteAddress());
                     sc.configureBlocking(false);
                     log.debug("before register:{}", sc.getRemoteAddress());
-                    sc.register(worker.selector, SelectionKey.OP_READ, null);
+                    worker.register(sc);
                     log.debug("after register:{}", sc.getRemoteAddress());
                 }
             }
@@ -62,19 +62,31 @@ public class MultiThreadServer {
 
         private String name;
 
+        private volatile boolean start = false;//还未初始化
+
+        private ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue();
+
         public Worker(String name) {
             this.name = name;
         }
 
-        private volatile boolean start = false;//还未初始化
-
-        public void register() throws IOException {
+        public void register(SocketChannel sc) throws IOException {
             if (!start) {
                 this.thread = new Thread(this, name);
                 selector = Selector.open();
                 thread.start();
                 start = true;
             }
+
+            queue.add(()-> {
+                try {
+                    sc.register(selector, SelectionKey.OP_READ, null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+            selector.wakeup();
         }
 
         @Override
@@ -82,6 +94,11 @@ public class MultiThreadServer {
             while (true) {
                 try {
                     selector.select();
+                    Runnable task = queue.poll();
+                    if (task != null) {
+                        task.run();
+                    }
+
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
                         SelectionKey key = iterator.next();
@@ -89,7 +106,10 @@ public class MultiThreadServer {
                         if (key.isReadable()) {
                             ByteBuffer buffer = ByteBuffer.allocate(16);
                             SocketChannel channel = (SocketChannel) key.channel();
-                            channel.read(buffer);
+                            int read = channel.read(buffer);
+                            if (read > -1) {
+                                log.debug("read:{}",  channel.getRemoteAddress());
+                            }
                             buffer.flip();
                         }
                     }
