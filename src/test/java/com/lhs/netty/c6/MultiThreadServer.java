@@ -11,6 +11,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * MultiThreadServer
@@ -33,8 +34,12 @@ public class MultiThreadServer {
 
         ssc.bind(new InetSocketAddress(8081));
 
-        Worker worker = new Worker("workder-0");
-
+        Worker[] workers = new Worker[2];
+        for (int i = 0; i < workers.length; i++) {
+            workers[i] = new Worker("worker-" + i);
+        }
+//        Worker worker = new Worker("workder-0");
+        AtomicInteger index = new AtomicInteger();
         while (true) {
             boss.select();
             Iterator<SelectionKey> iterator = boss.selectedKeys().iterator();
@@ -46,7 +51,7 @@ public class MultiThreadServer {
                     log.debug("connected:{}", sc.getRemoteAddress());
                     sc.configureBlocking(false);
                     log.debug("before register:{}", sc.getRemoteAddress());
-                    worker.register(sc);
+                    workers[index.getAndIncrement() % workers.length].register(sc);
                     log.debug("after register:{}", sc.getRemoteAddress());
                 }
             }
