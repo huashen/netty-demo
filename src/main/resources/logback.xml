@@ -1,97 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE configuration>
-<configuration debug="true">
+<configuration debug="false">
 
+    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
+    <property name="LOG_HOME" value="/home" />
+
+    <!--控制台日志， 控制台输出 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoding>UTF-8</encoding>
-        <append>false</append>
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern><![CDATA[
-%n%-4r[%d{yy/MM/dd HH:mm:ss}%X{productionMode}]==>[%X{req.method} %X{req.requestURL}]%n  [ip=%X{req.remoteHost}, forwardedFor=%X{req.xForwardedFor},ref=%X{req.referer}, ua=%X{req.userAgent}, sid=%X{req.jsessionid}]%n  %-5level %logger{35} - %m
-            ]]></pattern>
-        </layout>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度,%msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
     </appender>
 
-    <appender name="STDERR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${catalina.home}/logs/project/err.log</file>
-        <encoding>UTF-8</encoding>
-        <append>false</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>logs/project/err-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
-            <MaxHistory>10</MaxHistory>
-            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <MaxFileSize>200MB</MaxFileSize>
-            </TimeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern><![CDATA[
-%n%-4r[%d{yy/MM/dd HH:mm:ss}%X{productionMode}]==>[%X{req.method} %X{req.requestURL}]%n  [ip=%X{req.remoteHost}, forwardedFor=%X{req.xForwardedFor},ref=%X{req.referer}, ua=%X{req.userAgent}, sid=%X{req.jsessionid}]%n  %-5level %logger{35} - %m
-            ]]></pattern>
-        </layout>
-
-        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印错误日志 -->
-            <level>ERROR</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <appender name="WARN" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${catalina.home}/logs/project/warn.log</file>
-        <encoding>UTF-8</encoding>
-        <append>false</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${catalina.home}/logs/project/warn-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
-            <MaxHistory>10</MaxHistory>
-            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <MaxFileSize>200MB</MaxFileSize>
-            </TimeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern><![CDATA[
-%n%-4r[%d{yy/MM/dd HH:mm:ss}%X{productionMode}]==>[%X{req.method} %X{req.requestURL}]%n  [ip=%X{req.remoteHost}, forwardedFor=%X{req.xForwardedFor},ref=%X{req.referer}, ua=%X{req.userAgent}, sid=%X{req.jsessionid}]%n  %-5level %logger{35} - %m
-            ]]></pattern>
-        </layout>
-
-        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印错误日志 -->
-            <level>WARN</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <appender name="PROJECT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${catalina.home}/logs/project/project.log</file>
-        <encoding>UTF-8</encoding>
-        <append>false</append>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${catalina.home}/logs/project/project-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
-            <MaxHistory>10</MaxHistory>
-            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <MaxFileSize>200MB</MaxFileSize>
-            </TimeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern><![CDATA[
-%n%-4r[%d{yy/MM/dd HH:mm:ss}%X{productionMode}]==>%n  [%X{req.method} %X{req.requestURL}]%n  [ip=%X{req.remoteHost}, forwardedFor=%X{req.xForwardedFor},ref=%X{req.referer}, ua=%X{req.userAgent}, sid=%X{req.jsessionid}]%n  %-5level %logger{35} - %m
-            ]]></pattern>
-        </layout>
-    </appender>
-
-    <root>
-        <level value="DEBUG"/>
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="STDERR"/>
-        <appender-ref ref="WARN"/>
-        <appender-ref ref="PROJECT"/>
+    <!-- 日志输出级别 -->
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+<!--        <appender-ref ref="FILE"/>-->
     </root>
-
-    <logger name="com.lhs.netty" level="DEBUG"/>
-    <logger name="org.apache.http" level="WARN"/>
-    <logger name="org.apache.http" level="WARN"/>
-    <logger name="org.springframework" level="WARN"/>
-    <logger name="org.apache.shiro" level="WARN"/>
-    <logger name="org.mybatis.spring.SqlSessionUtils" level="WARN"/>
-    <logger name="org.mybatis.spring.transaction.SpringManagedTransaction" level="WARN"/>
-
 </configuration>
