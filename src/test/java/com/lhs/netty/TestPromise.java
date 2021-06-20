@@ -50,7 +50,7 @@ public class TestPromise {
 
         // main 线程阻塞等待执行结果
         try {
-            promise.await();
+            promise.sync();
         } catch (InterruptedException e) {
         }
     }
