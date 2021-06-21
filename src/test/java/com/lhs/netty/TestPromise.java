@@ -50,7 +50,11 @@ public class TestPromise {
 
         // main 线程阻塞等待执行结果
         try {
+            //阻塞等待任务结束，如果任务失败，将“导致失败的异常”重新抛出来
             promise.sync();
+
+            // 阻塞等待任务结束，和 sync() 功能是一样的，不过如果任务失败，它不会抛出执行过程中的异常
+            //promise.await();
         } catch (InterruptedException e) {
         }
     }
